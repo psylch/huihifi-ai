@@ -1,7 +1,8 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useMicroAppContext } from '../store/MicroAppContext';
-import { FilterManipulation } from '../types';
-import { parseAllManipulationTags, getFilterContext, aiConfig } from '../config/aiConfig';
+import { parseAllManipulationTags, getFilterContext } from '../config/llmParser';
+import { appConfig } from '../config/appConfig';
+import { aiService } from '../services';
 
 export default function useStreamingLLM() {
   const {
@@ -43,145 +44,6 @@ export default function useStreamingLLM() {
     setConversationId(null);
     console.log('手动重置对话');
   };
-
-  // 调用Flask后端的聊天接口
-  const callBackendChat = useCallback(async (
-    userMessage: string,
-    curveImageUrl: string | null,
-    currentFilters: any[],
-    userToken: string | null,
-    signal: AbortSignal,
-    onChunk: (chunk: string) => void
-  ): Promise<{ fullResponse: string; conversationId: string | null }> => {
-    try {
-      // 获取当前conversation_id
-      const conversationId = getConversationId();
-      
-      // 构建请求数据
-      const requestData = {
-        userToken: userToken || 'anonymous', // 使用从context获取的userToken
-        message: userMessage,
-        currentFilters: getFilterContext(currentFilters),
-        curveImageBase64: curveImageUrl,
-        conversationId: conversationId
-      };
-
-      console.log('发送请求到后端:', requestData);
-
-      // 发送请求到Flask后端
-      const response = await fetch('https://ai.huihifi.com/api/aituning/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData),
-        signal: signal
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // 处理SSE流式响应
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('无法获取响应流');
-      }
-
-      let fullResponse = '';
-      let newConversationId = conversationId; // 保持当前的conversationId，除非收到新的
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        if (signal.aborted) {
-          throw new Error('请求被中止');
-        }
-
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        // 解码数据块
-        buffer += decoder.decode(value, { stream: true });
-        
-        // 处理完整的SSE消息
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // 保留不完整的行
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const jsonStr = line.substring(6); // 移除 'data: ' 前缀
-              if (jsonStr.trim() === '') continue;
-
-              const eventData = JSON.parse(jsonStr);
-              console.log('收到SSE事件:', eventData);
-
-              // 处理不同类型的事件
-              switch (eventData.event) {
-                case 'message':
-                  // LLM返回文本块
-                  if (eventData.answer) {
-                    fullResponse += eventData.answer;
-                    onChunk(eventData.answer);
-                  }
-                  // 保存conversation_id
-                  if (eventData.conversation_id) {
-                    newConversationId = eventData.conversation_id;
-                  }
-                  break;
-
-                case 'message_end':
-                  // 消息结束
-                  console.log('消息流结束');
-                  if (eventData.conversation_id) {
-                    newConversationId = eventData.conversation_id;
-                  }
-                  break;
-
-                case 'error':
-                  // 错误事件
-                  throw new Error(eventData.message || '服务器返回错误');
-
-                case 'workflow_started':
-                case 'node_started':
-                case 'node_finished':
-                case 'workflow_finished':
-                  // 工作流事件，可以添加日志但不影响主流程
-                  console.log(`工作流事件: ${eventData.event}`);
-                  break;
-
-                case 'ping':
-                  // 心跳事件，忽略
-                  break;
-
-                default:
-                  console.log('未知事件类型:', eventData.event);
-              }
-            } catch (e) {
-              console.error('解析SSE数据失败:', e, '原始数据:', line);
-            }
-          }
-        }
-      }
-
-      // 保存conversation_id
-      if (newConversationId) {
-        setConversationId(newConversationId);
-      }
-
-      return { fullResponse, conversationId: newConversationId };
-
-    } catch (error: any) {
-      if (error.name === 'AbortError' || error.message.includes('中止')) {
-        throw new Error('请求被中止');
-      }
-      console.error('后端聊天请求失败:', error);
-      throw new Error(error.message || '聊天服务调用失败');
-    }
-  }, []);
 
   // Demo模式的模拟响应（保持兼容）
   const simulateDemoResponse = useCallback(async (
@@ -270,7 +132,7 @@ export default function useStreamingLLM() {
       let resultConversationId = null;
 
       // 根据配置决定使用真实API还是演示模式
-      if (aiConfig.demoMode.enabled) {
+      if (appConfig.demoMode.enabled) {
         console.log('使用演示模式');
         fullResponse = await simulateDemoResponse(
           userMessage, 
@@ -283,18 +145,27 @@ export default function useStreamingLLM() {
         );
       } else {
         console.log('调用后端API');
-        const result = await callBackendChat(
-          userMessage, 
-          curveImageUrl, 
-          appliedFilters,
-          userToken, // 使用从context获取的userToken
-          controller.signal, 
-          (chunk) => {
-            appendChunkToAIMessage(messageId, chunk);
+        const conversationId = getConversationId();
+        const result = await aiService.sendChatMessage(
+          {
+            userToken: userToken || 'anonymous',
+            message: userMessage,
+            currentFilters: getFilterContext(appliedFilters),
+            curveImageBase64: curveImageUrl,
+            conversationId,
+          },
+          {
+            signal: controller.signal,
+            onChunk: (chunk) => {
+              appendChunkToAIMessage(messageId, chunk);
+            },
           }
         );
         fullResponse = result.fullResponse;
         resultConversationId = result.conversationId;
+        if (resultConversationId) {
+          setConversationId(resultConversationId);
+        }
       }
       
       // 解析滤波器操作

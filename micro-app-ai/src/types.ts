@@ -1,45 +1,85 @@
-// 滤波器类型
+// ============ filters related ============
+
 export type FilterType = 'peaking' | 'low_shelf' | 'high_shelf' | 'lowpass' | 'highpass';
 
-// 滤波器参数接口
 export interface FilterParams {
   id: string;
   type: FilterType;
   freq: number;
   gain?: number;
   qFactor?: number;
-};
+}
 
-// 滤波器操作接口 - 来自LLM的操作指令
 export interface FilterManipulation {
   manipulationType: 'add' | 'edit' | 'delete';
-  filterId?: string; // 用于编辑和删除操作
+  filterId?: string;
   filterParams?: {
     filterType?: FilterType;
     freq?: number;
     gain?: number;
     qFactor?: number;
-  }; // 用于添加和编辑操作
+  };
 }
 
-// 聊天消息接口
+// ============ products mentioned (new) ============
+
+export interface MentionedProduct {
+  id: string;
+  name: string;
+  uuid: string;
+}
+
+export interface RichContentSegment {
+  type: 'text' | 'mention';
+  content?: string;
+  data?: MentionedProduct;
+}
+
+// ============ 频段覆盖 (新增) ============
+
+export interface SegmentCoverItem {
+  frequency_range: [number, number];
+  name: string;
+  uuid: string;
+  dataGroup: string;
+}
+
+export interface SegmentCoverData {
+  data_list: SegmentCoverItem[];
+}
+
+// ============ chat messages ============
+
 export interface ChatMessage {
   id: string;
   content: string;
   sender: 'user' | 'ai';
   manipulationActions?: FilterManipulation[];
+  segmentCoverAction?: SegmentCoverData;
+  richContent?: RichContentSegment[];
   timestamp: number;
   isStreaming?: boolean;
   error?: string;
-  rawContent?: string; // 含操作标签的原始内容
-  processedContent?: string; // 替换为占位符的内容
+  rawContent?: string;
+  processedContent?: string;
 }
 
-// 频率响应数据类型
-export type FrequencyResponseDataPoint = [string, string]; // [频率, 响应值]，以字符串形式存储以便于解析
+// ============ Frequency Response Data ============
+
+export type FrequencyResponseDataPoint = [string, string];
 export type FrequencyResponseData = FrequencyResponseDataPoint[];
 
-// 全局类型定义
+// ============ API related ============
+
+export interface ProductSearchResult {
+  uuid: string;
+  title: string;
+  brand: { title: string; img: string };
+  article: { thumbnails: string[] };
+}
+
+// ============ global window extension ============
+
 declare global {
   interface Window {
     __POWERED_BY_QIANKUN__?: boolean;

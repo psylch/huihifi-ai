@@ -45,7 +45,13 @@ micro-app-ai/
 │   │   └── MicroAppContext.tsx          # [状态] 全局状态管理
 │   │
 │   ├── config/
-│   │   └── aiConfig.ts                  # [配置] AI 模型配置 & Prompt
+│   │   ├── appConfig.ts                 # [配置] 调试/演示模式开关
+│   │   ├── llmParser.ts                 # [工具] LLM 解析 & 上下文生成
+│   │   └── promptTemplates.ts           # [资源] Demo Prompt 文案
+│   │
+│   ├── services/                       # 服务层
+│   │   ├── aiService.ts                # [服务] AI 聊天流式封装
+│   │   └── productService.ts           # [服务] 产品搜索代理
 │   │
 │   ├── utils/
 │   │   └── curveImageGenerator.ts       # [工具] Canvas 曲线图生成
@@ -226,8 +232,8 @@ sendMessageToLLM(userMessage, curveImageUrl)
   ↓
   2. addEmptyStreamingAIMessage()                  // 创建空 AI 消息
   ↓
-  3. callBackendChat(...)                          // 调用后端 API
-     ├── 发送 SSE 请求
+  3. aiService.sendChatMessage(...)                // 调用服务层封装的后端 API
+     ├── 内部发起 SSE 请求
      └── onChunk → appendChunkToAIMessage()        // 实时更新 UI
   ↓
   4. parseAllManipulationTags(fullResponse)        // 解析滤波器操作
@@ -243,99 +249,32 @@ sendMessageToLLM(userMessage, curveImageUrl)
 
 ---
 
-### 4. AI 配置 - Prompt 与解析
+### 4. 配置与服务层
 
-#### 📄 `config/aiConfig.ts`
+#### 📄 `config/appConfig.ts`
+- 管理调试面板和 Demo 模式的可配置项：
+  - `debugInfo.enabled` / `defaultVisible` 控制调试区域展示。
+  - `demoMode.enabled` / `responseDelay` 控制本地演示模式。
+- 提供 `updateDebugSettings()`，允许主应用在挂载时覆写调试开关。
 
-##### 4.1 模型配置 (L38-48)
-```typescript
-openai: {
-  model: 'gpt-4.1-2025-04-14',  // 实际后端可能使用其他多模态 AI
-  temperature: 0.7,
-  maxTokens: 8000,
-  apiKey: '...',                // 实际在后端使用
-  apiUrl: 'https://api.openai.com/v1',
-}
-```
+#### 📄 `config/llmParser.ts`
+- `parseAllManipulationTags(content)`：解析 `<freq_manipulation>` 标签中的 JSON，并返回结构化的 `FilterManipulation[]`。
+- `getFilterContext(filters)`：生成当前滤波器的文本上下文，兼容主应用与微应用字段命名差异。
+- `parseManipulationTags` 保留旧导出名，兼容历史引用。
 
-##### 4.2 System Prompt (L51-121)
+#### 📄 `config/promptTemplates.ts`
+- 保留 Demo 场景下的预设回答文案。
+- `getRandomDemoResponse()` 用于演示模式随机返回一条答案。
+- System Prompt 与模型参数现已迁移到后端配置，这里仅存放前端需要的演示资源。
 
-**角色设定**:
-```
-扮演"天木千歌" - HuiHiFi 网站的 AI 调音机娘
-专注于耳机调音和频响分析
-```
+#### 📄 `services/aiService.ts`
+- `AIService.sendChatMessage()` 封装与后端的 SSE 通信，负责处理流式读取、事件分发及对话 ID 更新。
+- 默认指向 `https://ai.huihifi.com/api/aituning`，必要时可通过构造函数调整 baseUrl。
+- 暴露的 `onChunk` 回调与 hook 中的 `appendChunkToAIMessage` 对接。
 
-**核心能力**:
-- 识别频响曲线图片（多模态视觉识别）
-- 基于用户描述和当前滤波器状态给出调音建议
-- 生成结构化的 `<freq_manipulation>` 操作指令
-
-**支持的滤波器类型** (L63-85):
-```
-1. peaking (峰值滤波器):     freq, gain, qFactor
-2. low_shelf (低频搁架):     freq, gain, qFactor
-3. high_shelf (高频搁架):    freq, gain, qFactor
-4. lowpass (低通滤波器):     freq, qFactor
-5. highpass (高通滤波器):    freq, qFactor
-```
-
-**操作指令格式**:
-
-添加滤波器 (L87-93):
-```xml
-<freq_manipulation>
-{
-  "manipulationType": "add",
-  "filterParams": { "filterType": "peaking", "freq": 1000, "gain": -3, "qFactor": 1.41 }
-}
-</freq_manipulation>
-```
-
-编辑滤波器 (L95-102):
-```xml
-<freq_manipulation>
-{
-  "manipulationType": "edit",
-  "filterId": "EXISTING_FILTER_ID",
-  "filterParams": { "gain": -2.5, "qFactor": 2.0 }
-}
-</freq_manipulation>
-```
-
-删除滤波器 (L104-110):
-```xml
-<freq_manipulation>
-{
-  "manipulationType": "delete",
-  "filterId": "EXISTING_FILTER_ID"
-}
-</freq_manipulation>
-```
-
-##### 4.3 解析函数 (L168-191)
-
-```typescript
-// 提取所有 <freq_manipulation> 标签中的 JSON
-parseAllManipulationTags(content: string): FilterManipulation[]
-
-// 正则表达式: /<freq_manipulation>([\s\S]*?)<\/freq_manipulation>/g
-// 解析每个匹配的 JSON 内容
-```
-
-##### 4.4 滤波器上下文生成 (L196-219)
-
-```typescript
-getFilterContext(filters: FilterParams[]): string
-// 生成当前滤波器列表的文本描述，注入到 AI Prompt 中
-// 示例输出:
-// """
-// 当前已应用的滤波器:
-// - id: "abc123", type: "peaking", freq: 1000, gain: -3, qFactor: 1.41
-// - id: "def456", type: "low_shelf", freq: 100, gain: 3, qFactor: 0.7
-// (当你建议删除或编辑滤波器时，请使用上面列出的 'id'。)
-// """
-```
+#### 📄 `services/productService.ts`
+- `searchProducts({ keyword, pageSize })` 预留产品搜索代理实现。
+- 调用 `/api/products/search`，在前端消费 HuiHiFi 主站的产品数据。
 
 ---
 
@@ -687,13 +626,14 @@ FrequencyResponseData = FrequencyResponseDataPoint[];
 
 ### 2. 调试技巧
 - **独立运行**: `npm run dev` → http://localhost:8081
-- **调试面板**: 设置 `aiConfig.debugInfo.enabled = true`
+- **调试面板**: 调整 `appConfig.debugInfo` 或通过主应用注入 `debugSettings`
 - **查看网络**: 观察 SSE 流 `https://ai.huihifi.com/api/aituning/chat`
 
 ### 3. 关键配置文件
-- `aiConfig.ts:41-42`: AI 模型和 Prompt
+- `config/appConfig.ts`: 调试面板 & Demo 模式开关
+- `config/llmParser.ts`: LLM 操作解析 & 滤波器上下文
+- `services/aiService.ts`: AI 聊天服务入口
 - `App.tsx:82`: 轮询间隔 (1000ms)
-- `useStreamingLLM.tsx:72`: API 端点
 
 ---
 
@@ -701,10 +641,11 @@ FrequencyResponseData = FrequencyResponseDataPoint[];
 
 | 需求 | 文件 | 行号 |
 |------|------|------|
-| 修改 AI Prompt | `config/aiConfig.ts` | L51-121 |
+| 调整调试配置 | `config/appConfig.ts` | - |
+| 修改解析逻辑 | `config/llmParser.ts` | - |
 | 调整轮询间隔 | `App.tsx` | L107 |
-| 修改 API 端点 | `hooks/useStreamingLLM.tsx` | L72 |
-| 修改滤波器类型 | `types.ts` | L2 |
+| 调整 API 封装 | `services/aiService.ts` | - |
+| 修改滤波器类型 | `types.ts` | L1 |
 | 调整图表样式 | `components/FrequencyResponseChart.tsx` | - |
 | 修改操作卡片样式 | `components/ManipulationAction.tsx` | L23-54 |
 | 调整曲线图生成参数 | `utils/curveImageGenerator.ts` | L12-23 |

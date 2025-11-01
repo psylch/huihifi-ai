@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AIAssistant from './components/AIAssistant';
 import { StoreProvider } from './store/MicroAppContext';
 import { FilterParams, FilterManipulation, FrequencyResponseData } from './types';
-import { aiConfig } from './config/aiConfig';
+import { appConfig } from './config/appConfig';
 import CurveImageDisplay from './components/CurveImageDisplay';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
@@ -70,13 +70,13 @@ const App: React.FC<AppProps> = (props) => {
   useEffect(() => {
     // 检查是否有调试设置传入
     if (props.debugSettings) {
-      // 使用aiConfig的updateDebugSettings方法更新设置
-      aiConfig.updateDebugSettings(props.debugSettings);
+      // 使用appConfig的updateDebugSettings方法更新设置
+      appConfig.updateDebugSettings(props.debugSettings);
     }
   }, [props.debugSettings]);
   
   // 调试信息显示状态
-  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(aiConfig.debugInfo.defaultVisible);
+  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(appConfig.debugInfo.defaultVisible);
 
   // 定时从主应用获取共享数据
   useEffect(() => {
@@ -200,7 +200,7 @@ const App: React.FC<AppProps> = (props) => {
   //             <div style={{ 
   //               flexGrow: 1, // Allow content to take available space
   //               display: 'grid',
-  //               gridTemplateColumns: aiConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
+  //               gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
   //               gap: '20px',
   //               padding: '0 20px 20px 20px', // Add padding around the grid
   //               overflowY: 'auto' // Add scroll for content if it overflows
@@ -208,7 +208,7 @@ const App: React.FC<AppProps> = (props) => {
   //               <AIAssistant />
                 
   //               {/* Debug information panel for micro-app mode */}
-  //               {aiConfig.debugInfo.enabled && showDebugInfo && (
+  //               {appConfig.debugInfo.enabled && showDebugInfo && (
   //                 <div style={{overflowY: 'auto'}}> {/* Allow scrolling within the debug panel */}
   //                   <div className="card">
   //                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -268,13 +268,13 @@ const App: React.FC<AppProps> = (props) => {
   //           <h1 style={{ marginBottom: '20px' }}>AI HiFi Tuning - AI助手 (独立运行模式)</h1>
   //           <div style={{ 
   //             display: 'grid',
-  //             gridTemplateColumns: aiConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
+  //             gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
   //             gap: '20px'
   //           }}>
   //             <AIAssistant />
               
-  //             {/* 只有在aiConfig中启用调试信息时才显示调试区域 */}
-  //             {aiConfig.debugInfo.enabled && showDebugInfo && (
+  //             {/* 只有在appConfig中启用调试信息时才显示调试区域 */}
+  //             {appConfig.debugInfo.enabled && showDebugInfo && (
   //               <div>
   //                 <div className="card">
   //                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -352,7 +352,7 @@ const App: React.FC<AppProps> = (props) => {
               <div style={{ 
                 flexGrow: 1, // Allow content to take available space
                 display: 'grid',
-                gridTemplateColumns: aiConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
+                gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
                 gap: '20px',
                 padding: '0 20px 20px 20px', // Add padding around the grid
                 overflowY: 'auto' // Add scroll for content if it overflows
@@ -360,7 +360,7 @@ const App: React.FC<AppProps> = (props) => {
                 <AIAssistant />
                 
                 {/* Debug information panel for micro-app mode */}
-                {aiConfig.debugInfo.enabled && showDebugInfo && (
+                {appConfig.debugInfo.enabled && showDebugInfo && (
                   <div style={{overflowY: 'auto'}}> {/* Allow scrolling within the debug panel */}
                     <div className="card">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -435,13 +435,13 @@ const App: React.FC<AppProps> = (props) => {
             <h1 style={{ marginBottom: '20px' }}>千歌AI助手</h1>
             <div style={{ 
               display: 'grid',
-              gridTemplateColumns: aiConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
+              gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
               gap: '20px'
             }}>
               <AIAssistant />
               
-              {/* 只有在aiConfig中启用调试信息时才显示调试区域 */}
-              {aiConfig.debugInfo.enabled && showDebugInfo && (
+              {/* 只有在appConfig中启用调试信息时才显示调试区域 */}
+              {appConfig.debugInfo.enabled && showDebugInfo && (
                 <div>
                   <div className="card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
