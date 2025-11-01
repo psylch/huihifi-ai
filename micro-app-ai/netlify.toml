@@ -1,0 +1,47 @@
+[build]
+  # 安装依赖并构建
+  command = "npm ci --legacy-peer-deps && npm run build"
+  # 发布目录，来自vite.config.ts的outDir
+  publish = "dist"
+
+[build.environment]
+  # 使用Node.js 18，兼容性更好
+  NODE_VERSION = "18"
+  # 防止TypeScript错误中断构建
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# SPA重定向设置，确保刷新和直接访问路径时不会404
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 允许CORS，对微前端应用很重要
+[[headers]]
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    Access-Control-Allow-Credentials = "true"
+    # 特别重要：添加这个头以允许脚本远程加载
+    X-Frame-Options = "ALLOWALL"
+    # 设置内容类型检查
+    X-Content-Type-Options = "nosniff"
+    # 缓存控制
+    Cache-Control = "public, max-age=31536000"
+
+# 为JavaScript文件增加特殊头部
+[[headers]]
+  for = "*.js"
+    [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=31536000"
+
+# 对scripts目录特别处理
+[[headers]]
+  for = "/scripts/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=31536000"

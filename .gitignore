@@ -1,0 +1,10 @@
+
+aihifi_tree.txt
+aihifi/
+cert/
+.json
+.env
+backup/
+six-dim-graph-eva/
+docs/
+eval/

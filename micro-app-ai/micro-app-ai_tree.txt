@@ -1,0 +1,58 @@
+.
+├── dist
+│   ├── assets
+│   │   ├── index.css
+│   │   └── index.js
+│   ├── index.html
+│   ├── main-standalone.js
+│   ├── public-path.js
+│   ├── qiankun-entry.js
+│   └── scripts
+│       └── qiankun-helper.js
+├── index.html
+├── micro-app-ai_tree.txt
+├── netlify.toml
+├── package-lock.json
+├── package.json
+├── public
+│   ├── main-standalone.js
+│   ├── public-path.js
+│   └── qiankun-entry.js
+├── README-CHART-INTEGRATION.md
+├── scripts
+│   └── qiankun-helper.js
+├── src
+│   ├── App.tsx
+│   ├── AppRouter.tsx
+│   ├── components
+│   │   ├── AIAssistant.tsx
+│   │   ├── AIManipulationCard.tsx
+│   │   ├── ChatHistoryDisplay.tsx
+│   │   ├── ChatInputArea.tsx
+│   │   ├── ChatMessageBubble.tsx
+│   │   ├── CurveImageDisplay.tsx
+│   │   ├── FrequencyResponseChart.tsx
+│   │   └── ManipulationAction.tsx
+│   ├── config
+│   │   └── aiConfig.ts
+│   ├── hooks
+│   │   ├── useStreamingLLM_old.tsx
+│   │   └── useStreamingLLM.tsx
+│   ├── main.tsx
+│   ├── pages
+│   │   └── TestChartPage.tsx
+│   ├── public-path.js
+│   ├── store
+│   │   └── MicroAppContext.tsx
+│   ├── styles
+│   │   └── index.css
+│   ├── types.d.ts
+│   ├── types.ts
+│   └── utils
+│       └── curveImageGenerator.ts
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+└── windsurf_deployment.yaml
+
+14 directories, 42 files

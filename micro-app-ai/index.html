@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI HiFi Tuning - AI助手微应用</title>
+  <!-- 动态设置公共路径，确保在所有脚本之前加载 -->
+  <script src="./public-path.js"></script>
+  <script>
+    // 如果微应用引用了CSS等静态资源，需要设置public Path
+    window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__ || '';
+  </script>
+  <script>
+    // 定义全局变量，确保不会出现undefined错误
+    window.__POWERED_BY_QIANKUN__ = window.__POWERED_BY_QIANKUN__ || false;
+  </script>
+  <!-- qiankun辅助脚本，修复模块加载问题 -->
+  <script src="./scripts/qiankun-helper.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    // 兼容qiankun的生命周期导出
+    if (window.__POWERED_BY_QIANKUN__) {
+      setTimeout(() => {
+        try {
+          // 导出生命周期函数到window对象
+          if (window.microAppAi) {
+            window.bootstrap = window.microAppAi.bootstrap;
+            window.mount = window.microAppAi.mount;
+            window.unmount = window.microAppAi.unmount;
+          }
+        } catch (e) {
+          console.error('导出生命周期函数失败:', e);
+        }
+      }, 300);
+    }
+  </script>
+</body>
+</html>
