@@ -74,8 +74,14 @@ export type FrequencyResponseData = FrequencyResponseDataPoint[];
 export interface ProductSearchResult {
   uuid: string;
   title: string;
-  brand: { title: string; img: string };
-  article: { thumbnails: string[] };
+  brand: { title?: string; img?: string };
+  thumbnails: string[];
+  categoryName: string;
+}
+
+export interface ProductSearchResponse {
+  products: ProductSearchResult[];
+  total: number;
 }
 
 // ============ global window extension ============
