@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { ChatMessage, FilterManipulation, FilterParams } from '../types';
+import { ChatMessage, FilterManipulation, FilterParams, SegmentCoverData } from '../types';
 import ChatMessageBubble from './ChatMessageBubble';
 
 interface ChatHistoryDisplayProps {
@@ -9,6 +9,7 @@ interface ChatHistoryDisplayProps {
   editFilterFromLLM: (id: string, params: FilterManipulation['filterParams']) => boolean;
   deleteFilterFromLLM: (id: string) => boolean;
   appliedFilters: FilterParams[];
+  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
 }
 
 const ChatHistoryDisplay: React.FC<ChatHistoryDisplayProps> = ({
@@ -17,7 +18,8 @@ const ChatHistoryDisplay: React.FC<ChatHistoryDisplayProps> = ({
   addFilterFromLLM,
   editFilterFromLLM,
   deleteFilterFromLLM,
-  appliedFilters
+  appliedFilters,
+  coverSegmentFromLLM,
 }) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +43,7 @@ const ChatHistoryDisplay: React.FC<ChatHistoryDisplayProps> = ({
         editFilterFromLLM={editFilterFromLLM}
         deleteFilterFromLLM={deleteFilterFromLLM}
         appliedFilters={appliedFilters}
+        coverSegmentFromLLM={coverSegmentFromLLM}
       />
     );
   };
@@ -68,6 +71,7 @@ const ChatHistoryDisplay: React.FC<ChatHistoryDisplayProps> = ({
               <li>修改现有滤波器的参数</li>
               <li>删除不需要的滤波器</li>
               <li>就音频调节提供建议</li>
+              <li>通过 <code>@</code> 精准提及耳机产品，混合不同耳机的频响特性</li>
             </ul>
             <p>请告诉我您希望调节的音频效果，比如"增强低音"或"减少4kHz的刺耳感"。</p>
           </div>

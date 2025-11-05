@@ -57,11 +57,19 @@ export interface ChatMessage {
   manipulationActions?: FilterManipulation[];
   segmentCoverAction?: SegmentCoverData;
   richContent?: RichContentSegment[];
+  mentions?: MentionedProduct[];
   timestamp: number;
   isStreaming?: boolean;
   error?: string;
   rawContent?: string;
   processedContent?: string;
+}
+
+export interface UserMessagePayload {
+  displayContent: string;
+  llmPayload: string;
+  richContent?: RichContentSegment[];
+  mentions?: MentionedProduct[];
 }
 
 // ============ Frequency Response Data ============

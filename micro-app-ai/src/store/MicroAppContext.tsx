@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { FilterParams, FilterManipulation, ChatMessage, FrequencyResponseData } from '../types';
+import {
+  FilterParams,
+  FilterManipulation,
+  ChatMessage,
+  FrequencyResponseData,
+  UserMessagePayload,
+  SegmentCoverData,
+} from '../types';
 
 // 创建上下文接口
 interface MicroAppContextType {
@@ -14,14 +21,14 @@ interface MicroAppContextType {
   userToken: string | null; // 添加userToken
 
   // 动作
-  addUserMessage: (content: string) => void;
+  addUserMessage: (payload: UserMessagePayload) => void;
   addEmptyStreamingAIMessage: (messageId?: string) => string;
   appendChunkToAIMessage: (messageId: string, chunk: string) => void;
   finalizeAIMessage: (
     messageId: string,
     fullContent: string,
     manipulations?: FilterManipulation[],
-    extraContent?: { rawContent?: string; processedContent?: string }
+    extraContent?: { rawContent?: string; processedContent?: string; segmentCover?: SegmentCoverData | null }
   ) => void;
   setAIMessageError: (messageId: string, error: string) => void;
   setLoadingLLM: (isLoading: boolean) => void;
@@ -31,6 +38,7 @@ interface MicroAppContextType {
   addFilterFromLLM: (params: FilterManipulation['filterParams']) => void;
   editFilterFromLLM: (id: string, params: FilterManipulation['filterParams']) => boolean;
   deleteFilterFromLLM: (id: string) => boolean;
+  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
 }
 
 // 创建上下文
@@ -49,6 +57,7 @@ interface StoreProviderProps {
     addFilterFromLLM: (filterParams: FilterManipulation['filterParams']) => void;
     editFilterFromLLM: (filterId: string, filterParams: FilterManipulation['filterParams']) => boolean;
     deleteFilterFromLLM: (filterId: string) => boolean;
+    coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
   };
   userToken?: string; // 添加userToken参数
 }
@@ -62,12 +71,14 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children, sharedDa
   const [currentCurveImageDataURL, setCurrentCurveImageDataURL] = useState<string | null>(null);
 
   // 添加用户消息
-  const addUserMessage = (content: string) => {
+  const addUserMessage = (payload: UserMessagePayload) => {
     const newMessage: ChatMessage = {
       id: uuidv4(),
-      content,
+      content: payload.displayContent,
       sender: 'user',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      richContent: payload.richContent,
+      mentions: payload.mentions,
     };
     setChatHistory(prev => [...prev, newMessage]);
   };
@@ -98,7 +109,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children, sharedDa
     messageId: string,
     fullContent: string,
     manipulations?: FilterManipulation[],
-    extraContent?: { rawContent?: string; processedContent?: string }
+    extraContent?: { rawContent?: string; processedContent?: string; segmentCover?: SegmentCoverData | null }
   ) => {
     console.log('完成AI消息:', messageId);
     console.log('完整内容:', fullContent);
@@ -113,7 +124,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children, sharedDa
             manipulationActions: manipulations, 
             isStreaming: false,
             rawContent: extraContent?.rawContent,
-            processedContent: extraContent?.processedContent
+            processedContent: extraContent?.processedContent,
+            segmentCoverAction: extraContent?.segmentCover || undefined,
           } 
         : msg
       );
@@ -154,6 +166,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children, sharedDa
     addFilterFromLLM: callbacks.addFilterFromLLM,
     editFilterFromLLM: callbacks.editFilterFromLLM,
     deleteFilterFromLLM: callbacks.deleteFilterFromLLM,
+    coverSegmentFromLLM: callbacks.coverSegmentFromLLM,
   };
 
   return (

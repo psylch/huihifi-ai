@@ -83,6 +83,13 @@ export class AIService {
               }
               break;
 
+            case 'segment_cover':
+              if (eventData.data) {
+                const serialized = `<segment_cover>${JSON.stringify(eventData.data)}</segment_cover>`;
+                fullResponse += serialized;
+              }
+              break;
+
             case 'error':
               throw new Error(eventData.message || '服务器返回错误');
 
@@ -111,4 +118,3 @@ export class AIService {
 }
 
 export const aiService = new AIService();
-

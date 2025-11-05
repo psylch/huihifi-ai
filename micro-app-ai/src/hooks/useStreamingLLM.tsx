@@ -1,8 +1,9 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useMicroAppContext } from '../store/MicroAppContext';
-import { parseAllManipulationTags, getFilterContext } from '../config/llmParser';
+import { parseAllManipulationTags, getFilterContext, parseSegmentCoverTag } from '../config/llmParser';
 import { appConfig } from '../config/appConfig';
 import { aiService } from '../services';
+import { SegmentCoverData, UserMessagePayload } from '../types';
 
 export default function useStreamingLLM() {
   const {
@@ -47,12 +48,13 @@ export default function useStreamingLLM() {
 
   // Demo模式的模拟响应（保持兼容）
   const simulateDemoResponse = useCallback(async (
-    userMessage: string,
+    userPayload: UserMessagePayload,
     curveImageUrl: string | null,
     appliedFilters: any[],
     signal: AbortSignal,
     onChunk: (chunk: string) => void
   ): Promise<string> => {
+    const userMessage = userPayload.displayContent;
     // 获取滤波器上下文
     const filterContext = getFilterContext(appliedFilters);
     
@@ -110,9 +112,9 @@ export default function useStreamingLLM() {
   }, []);
 
   // 发送消息到LLM
-  const sendMessageToLLM = async (userMessage: string, curveImageUrl: string | null = null) => {
+  const sendMessageToLLM = async (userPayload: UserMessagePayload, curveImageUrl: string | null = null) => {
     // 添加用户消息
-    addUserMessage(userMessage);
+    addUserMessage(userPayload);
     
     // 设置加载状态
     setLoadingLLM(true);
@@ -135,7 +137,7 @@ export default function useStreamingLLM() {
       if (appConfig.demoMode.enabled) {
         console.log('使用演示模式');
         fullResponse = await simulateDemoResponse(
-          userMessage, 
+          userPayload, 
           curveImageUrl, 
           appliedFilters, 
           controller.signal, 
@@ -149,7 +151,7 @@ export default function useStreamingLLM() {
         const result = await aiService.sendChatMessage(
           {
             userToken: userToken || 'anonymous',
-            message: userMessage,
+            message: userPayload.llmPayload,
             currentFilters: getFilterContext(appliedFilters),
             curveImageBase64: curveImageUrl,
             conversationId,
@@ -171,12 +173,23 @@ export default function useStreamingLLM() {
       // 解析滤波器操作
       const manipulations = parseAllManipulationTags(fullResponse);
       console.log('解析到的滤波器操作:', manipulations);
+
+      // 解析频段覆盖操作
+      const segmentCover: SegmentCoverData | null = parseSegmentCoverTag(fullResponse);
+      if (segmentCover) {
+        console.log('解析到的频段覆盖操作:', segmentCover);
+      }
       
       // 清理显示内容（移除操作标签）
-      const cleanContent = fullResponse.replace(/<freq_manipulation>[\s\S]*?<\/freq_manipulation>/gs, '').trim();
+      const cleanContent = fullResponse
+        .replace(/<freq_manipulation>[\s\S]*?<\/freq_manipulation>/gs, '')
+        .replace(/<segment_cover>[\s\S]*?<\/segment_cover>/gs, '')
+        .trim();
       
       // 生成带占位符的内容（用于UI高亮）
-      const processedContent = fullResponse.replace(/<freq_manipulation>[\s\S]*?<\/freq_manipulation>/gs, '<span class="ai-manipulation-placeholder">滤波器操作</span>');
+      const processedContent = fullResponse
+        .replace(/<freq_manipulation>[\s\S]*?<\/freq_manipulation>/gs, '<span class="ai-manipulation-placeholder">滤波器操作</span>')
+        .replace(/<segment_cover>[\s\S]*?<\/segment_cover>/gs, '<span class="ai-manipulation-placeholder">频段覆盖</span>');
       
       // 完成消息
       finalizeAIMessage(
@@ -185,7 +198,8 @@ export default function useStreamingLLM() {
         manipulations,
         { 
           rawContent: fullResponse,
-          processedContent: processedContent
+          processedContent: processedContent,
+          segmentCover: segmentCover
         }
       );
 

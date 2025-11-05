@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AIAssistant from './components/AIAssistant';
 import { StoreProvider } from './store/MicroAppContext';
-import { FilterParams, FilterManipulation, FrequencyResponseData } from './types';
+import { FilterParams, FilterManipulation, FrequencyResponseData, SegmentCoverData } from './types';
 import { appConfig } from './config/appConfig';
 import CurveImageDisplay from './components/CurveImageDisplay';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
@@ -26,6 +26,7 @@ interface AppProps {
     addFilterFromLLM: (filterParams: FilterManipulation['filterParams']) => void;
     editFilterFromLLM: (filterId: string, filterParams: FilterManipulation['filterParams']) => boolean;
     deleteFilterFromLLM: (filterId: string) => boolean;
+    coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
   };
   // 调试信息设置，由主应用传入
   debugSettings?: {
@@ -185,6 +186,17 @@ const App: React.FC<AppProps> = (props) => {
       } catch (error) {
         console.error('删除滤波器失败:', error);
         return false;
+      }
+    },
+    coverSegmentFromLLM: (dataList: SegmentCoverData['data_list']) => {
+      try {
+        if (props.callbacks?.coverSegmentFromLLM) {
+          props.callbacks.coverSegmentFromLLM(dataList);
+          return;
+        }
+        console.log('模拟频段覆盖操作:', dataList);
+      } catch (error) {
+        console.error('调用频段覆盖回调失败:', error);
       }
     },
   };

@@ -1,6 +1,7 @@
-import { FilterManipulation, FilterParams } from '../types';
+import { FilterManipulation, FilterParams, SegmentCoverData } from '../types';
 
 const MANIPULATION_TAG_REGEX = /<freq_manipulation>([\s\S]*?)<\/freq_manipulation>/g;
+const SEGMENT_COVER_TAG_REGEX = /<segment_cover>([\s\S]*?)<\/segment_cover>/;
 
 export const parseAllManipulationTags = (content: string): FilterManipulation[] => {
   const regex = new RegExp(MANIPULATION_TAG_REGEX);
@@ -21,6 +22,25 @@ export const parseAllManipulationTags = (content: string): FilterManipulation[] 
 };
 
 export const parseManipulationTags = parseAllManipulationTags;
+
+export const parseSegmentCoverTag = (content: string): SegmentCoverData | null => {
+  const match = content.match(SEGMENT_COVER_TAG_REGEX);
+  if (!match) {
+    return null;
+  }
+
+  try {
+    const jsonContent = match[1].trim();
+    const parsed = JSON.parse(jsonContent) as SegmentCoverData;
+    if (!Array.isArray(parsed?.data_list)) {
+      throw new Error('data_list must be an array');
+    }
+    return parsed;
+  } catch (error) {
+    console.error('Error parsing segment cover tag JSON:', error);
+    return null;
+  }
+};
 
 export const getFilterContext = (filters: FilterParams[]): string => {
   if (!filters.length) {

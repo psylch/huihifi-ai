@@ -1,8 +1,10 @@
 
 
 import React from 'react';
-import { ChatMessage, FilterManipulation, FilterParams } from '../types';
+import { ChatMessage, FilterManipulation, FilterParams, SegmentCoverData } from '../types';
 import AIManipulationCard from './AIManipulationCard';
+import MentionChip from './MentionChip';
+import SegmentCoverAction from './SegmentCoverAction';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -10,6 +12,7 @@ interface ChatMessageBubbleProps {
   editFilterFromLLM: (filterId: string, filterParams: Partial<FilterParams>) => void;
   deleteFilterFromLLM: (filterId: string) => void;
   appliedFilters: FilterParams[];
+  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
@@ -17,9 +20,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   addFilterFromLLM,
   editFilterFromLLM,
   deleteFilterFromLLM,
-  appliedFilters
+  appliedFilters,
+  coverSegmentFromLLM,
 }) => {
-  const { sender, content, manipulationActions, isStreaming, timestamp, error } = message;
+  const { sender, content, manipulationActions, isStreaming, timestamp, error, richContent, segmentCoverAction } = message;
   
   // 添加日志记录，帮助诊断操作标签问题
   console.log(`渲染消息 ${message.id}:`, {
@@ -32,6 +36,19 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
   const formattedTime = timestamp 
     ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : '';
+
+  const renderUserRichContent = () => {
+    if (!richContent || richContent.length === 0) {
+      return content;
+    }
+
+    return richContent.map((segment, index) => {
+      if (segment.type === 'mention' && segment.data) {
+        return <MentionChip key={`${segment.data.id}-${index}`} product={segment.data} />;
+      }
+      return <React.Fragment key={`text-${index}`}>{segment.content}</React.Fragment>;
+    });
+  };
   
   return (
     <div 
@@ -62,7 +79,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
             }
           `}
         </style>
-        {message.processedContent ? (
+        {sender === 'user' ? (
+          <span className="user-message-content">{renderUserRichContent()}</span>
+        ) : message.processedContent ? (
           <span
             className="ai-message-content"
             dangerouslySetInnerHTML={{ __html: message.processedContent }}
@@ -114,6 +133,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
               appliedFilters={appliedFilters}
             />
           ))}
+        </div>
+      )}
+
+      {segmentCoverAction && (
+        <div
+          style={{
+            alignSelf: sender === 'user' ? 'flex-end' : 'flex-start',
+            width: '100%',
+            maxWidth: '420px',
+            marginTop: '8px',
+          }}
+        >
+          <SegmentCoverAction
+            segmentData={segmentCoverAction}
+            onApply={coverSegmentFromLLM ? (dataList) => coverSegmentFromLLM(dataList) : undefined}
+          />
         </div>
       )}
     </div>
