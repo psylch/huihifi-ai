@@ -92,10 +92,19 @@ export interface ProductSearchResponse {
   total: number;
 }
 
-// ============ global window extension ============
+// ============ global window & env extension ============
 
 declare global {
   interface Window {
     __POWERED_BY_QIANKUN__?: boolean;
+    __HUIHIFI_API_BASE_URL__?: string;
+  }
+
+  interface ImportMetaEnv {
+    readonly VITE_API_BASE_URL?: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
   }
 }

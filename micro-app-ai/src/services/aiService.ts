@@ -1,3 +1,5 @@
+import { apiConfig } from '../config/apiConfig';
+
 export interface ChatRequestParams {
   userToken: string;
   message: string;
@@ -17,7 +19,7 @@ export interface ChatStreamOptions {
 }
 
 export class AIService {
-  constructor(private readonly baseUrl = 'https://ai.huihifi.com/api/aituning') {}
+  constructor(private readonly baseUrl = apiConfig.baseUrl) {}
 
   async sendChatMessage(
     request: ChatRequestParams,

@@ -80,6 +80,18 @@ npm run dev
 
 访问 http://localhost:8080 即可打开应用。
 
+### 启动后端服务
+
+AI 功能依赖 `aituning_service` 提供的 Flask 后端。使用脚本一键启动：
+
+```bash
+chmod +x scripts/run-backend.sh            # 首次需要赋权
+./scripts/run-backend.sh start             # 前台运行（Ctrl+C 停止）
+# 或 ./scripts/run-backend.sh daemon       # 后台运行，日志见 aituning_service/backend.log
+```
+
+详细说明（环境配置、常见问题）见 [docs/backend-service.md](docs/backend-service.md)。
+
 ## 应用功能
 
 ### 主应用

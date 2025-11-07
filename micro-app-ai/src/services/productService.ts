@@ -1,4 +1,5 @@
 import { ProductSearchResponse } from '../types';
+import { apiConfig } from '../config/apiConfig';
 
 export interface ProductSearchParams {
   keyword: string;
@@ -6,32 +7,30 @@ export interface ProductSearchParams {
 }
 
 export class ProductService {
-  constructor(private readonly baseUrl = '/api/products') {}
+  constructor(private readonly searchUrl = apiConfig.productSearchUrl) {}
 
   async searchProducts({ keyword, pageSize = 20 }: ProductSearchParams): Promise<ProductSearchResponse> {
-    const response = await fetch(`${this.baseUrl}/search`, {
+    const trimmedKeyword = keyword.trim();
+
+    const response = await fetch(this.searchUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keyword, pageSize }),
+      body: JSON.stringify({ keyword: trimmedKeyword, pageSize }),
     });
 
-    const payload = await response.json().catch(() => null);
-
     if (!response.ok) {
-      const message = payload?.message || payload?.error || response.statusText;
-      throw new Error(`产品搜索失败: ${message}`);
+      const errorText = await response.text().catch(() => '');
+      throw new Error(errorText || `HTTP ${response.status}`);
     }
 
-    if (payload?.code !== 0 || !payload?.data) {
-      const message = payload?.message || '产品搜索失败';
-      throw new Error(message);
-    }
+    const payload = await response.json().catch(() => ({}));
+    const products = Array.isArray(payload?.data?.products) ? payload.data.products : [];
+    const total =
+      typeof payload?.data?.total === 'number'
+        ? payload.data.total
+        : products.length;
 
-    const data = payload.data as ProductSearchResponse;
-    return {
-      products: Array.isArray(data?.products) ? data.products : [],
-      total: typeof data?.total === 'number' ? data.total : 0,
-    };
+    return { products, total };
   }
 }
 

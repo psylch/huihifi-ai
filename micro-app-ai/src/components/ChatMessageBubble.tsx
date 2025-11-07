@@ -25,15 +25,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
 }) => {
   const { sender, content, manipulationActions, isStreaming, timestamp, error, richContent, segmentCoverAction } = message;
   
-  // 添加日志记录，帮助诊断操作标签问题
-  console.log(`渲染消息 ${message.id}:`, {
+  // Log to help diagnose manipulation tag issues
+  console.log(`Rendering message ${message.id}:`, {
     hasManipulations: !!manipulationActions,
     manipulationCount: manipulationActions?.length,
     manipulations: manipulationActions
   });
-  
-  // 转换时间戳为可读格式
-  const formattedTime = timestamp 
+
+  // Convert timestamp to readable format
+  const formattedTime = timestamp
     ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     : '';
 
@@ -90,7 +90,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           content
         )}
         
-        {/* 显示错误信息（如果有） */}
+        {/* show the error message (if any) */}
         {error && (
           <div style={{ 
             marginTop: '8px', 
@@ -113,8 +113,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
           {formattedTime}
         </div>
       </div>
-      
-      {/* 渲染操作卡片（如果有） */}
+
+      {/* render manipulation cards (if any) */}
       {manipulationActions && manipulationActions.length > 0 && (
         <div style={{ 
           alignSelf: sender === 'user' ? 'flex-end' : 'flex-start',

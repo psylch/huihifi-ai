@@ -85,7 +85,8 @@ import { useMicroAppContext } from '../store/MicroAppContext';
 import useStreamingLLM from '../hooks/useStreamingLLM';
 import ChatHistoryDisplay from './ChatHistoryDisplay';
 import ChatInputArea from './ChatInputArea';
-import CurveImageDisplay from './CurveImageDisplay';
+import FrequencyResponseChart from './FrequencyResponseChart';
+import { apiConfig } from '../config/apiConfig';
 
 interface UsageInfo {
   used: number;
@@ -104,7 +105,10 @@ const AIAssistant: React.FC = () => {
     editFilterFromLLM,
     deleteFilterFromLLM,
     currentCurveImageDataURL,
-    userToken
+    userToken,
+    coverSegmentFromLLM,
+    originalDataSource,
+    currentProcessedCurve,
   } = useMicroAppContext();
   
   const { sendMessageToLLM } = useStreamingLLM();
@@ -122,7 +126,7 @@ const AIAssistant: React.FC = () => {
     setUsageError(null);
     
     try {
-      const response = await fetch(`https://ai.huihifi.com/api/aituning/usage/${encodeURIComponent(userToken)}`);
+      const response = await fetch(apiConfig.getUsageUrl(userToken));
       if (response.ok) {
         const data = await response.json();
         setUsageInfo(data);
@@ -295,7 +299,10 @@ const AIAssistant: React.FC = () => {
 
       {/* 隐藏的图片生成器 - 确保AI始终有图片数据 */}
       <div style={{ display: 'none' }}>
-        <CurveImageDisplay />
+        <FrequencyResponseChart
+          originalDataSource={originalDataSource}
+          currentProcessedCurve={currentProcessedCurve}
+        />
       </div>
       
       {/* 使用次数显示 */}
@@ -309,11 +316,12 @@ const AIAssistant: React.FC = () => {
         editFilterFromLLM={editFilterFromLLM}
         deleteFilterFromLLM={deleteFilterFromLLM}
         appliedFilters={appliedFilters}
+        coverSegmentFromLLM={coverSegmentFromLLM}
       />
       
       {/* 聊天输入区域组件 */}
       <ChatInputArea 
-        onSendMessage={(userInput) => sendMessageToLLM(userInput, currentCurveImageDataURL)}
+        onSendMessage={(payload) => sendMessageToLLM(payload, currentCurveImageDataURL)}
         isLoading={isLoadingLLM}
       />
     </div>

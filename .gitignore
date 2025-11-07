@@ -8,3 +8,5 @@ backup/
 six-dim-graph-eva/
 docs/
 eval/
+Prompts/
+.DS_Store

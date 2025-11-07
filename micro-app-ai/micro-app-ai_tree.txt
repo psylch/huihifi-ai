@@ -30,8 +30,8 @@
 │   │   ├── ChatHistoryDisplay.tsx
 │   │   ├── ChatInputArea.tsx
 │   │   ├── ChatMessageBubble.tsx
-│   │   ├── CurveImageDisplay.tsx
 │   │   ├── FrequencyResponseChart.tsx
+│   │   ├── MentionChip.tsx
 │   │   └── ManipulationAction.tsx
 │   ├── config
 │   │   └── aiConfig.ts

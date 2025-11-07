@@ -46,14 +46,14 @@ class HuiHiFiClient:
         """
         Generate request signature.
 
-        sign = Base64(HMAC_SHA256(key=appKey+timestamp, msg=secretKey))
+        Official service expects: sign = Base64(HMAC_SHA256(key=secretKey, msg=appKey+timestamp))
         """
         if not self.is_configured:
             raise HuiHiFiCredentialsError("未配置 HuiHiFi API 凭证")
 
         timestamp = int(time.time() * 1000)
-        key = (self.app_key + str(timestamp)).encode("utf-8")
-        message = self.secret_key.encode("utf-8")
+        message = (self.app_key + str(timestamp)).encode("utf-8")
+        key = self.secret_key.encode("utf-8")
         digest = hmac.new(key, message, hashlib.sha256).digest()
         sign = base64.b64encode(digest).decode("utf-8")
         return sign, timestamp
@@ -63,16 +63,58 @@ class HuiHiFiClient:
             raise HuiHiFiClientError(f"HuiHiFi API 错误: {raw.get('message', 'unknown error')}")
 
         data = raw.get("data") or {}
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except ValueError:
+                data = {}
         products = []
 
-        for item in data.get("list", []):
+        raw_list = data.get("list", [])
+        if isinstance(raw_list, str):
+            try:
+                raw_list = json.loads(raw_list)
+            except ValueError:
+                raw_list = []
+
+        for raw_item in raw_list:
+            item = raw_item
+            if isinstance(raw_item, str):
+                try:
+                    item = json.loads(raw_item)
+                except ValueError:
+                    continue
+
+            if not isinstance(item, dict):
+                continue
+
+            brand = item.get("brand") or {}
+            if isinstance(brand, str):
+                try:
+                    brand = json.loads(brand)
+                except ValueError:
+                    brand = {"title": brand}
+
+            category = item.get("category") or {}
+            if isinstance(category, str):
+                category_name = category
+            else:
+                category_name = category.get("name", "")
+
+            article = item.get("article") or {}
+            if isinstance(article, str):
+                try:
+                    article = json.loads(article)
+                except ValueError:
+                    article = {}
+
             products.append(
                 {
                     "uuid": item.get("uuid"),
                     "title": item.get("title"),
-                    "brand": item.get("brand", {}),
-                    "thumbnails": (item.get("article") or {}).get("thumbnails", []),
-                    "categoryName": (item.get("category") or {}).get("name", ""),
+                    "brand": brand if isinstance(brand, dict) else {"title": str(brand)},
+                    "thumbnails": (article or {}).get("thumbnails", []),
+                    "categoryName": category_name,
                 }
             )
 

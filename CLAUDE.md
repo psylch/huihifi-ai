@@ -36,7 +36,7 @@ micro-app-ai/
 │   │   ├── AIManipulationCard.tsx       # [容器] 滤波器操作卡片容器
 │   │   ├── ManipulationAction.tsx       # [交互] 单个滤波器操作
 │   │   ├── FrequencyResponseChart.tsx   # [图表] Recharts 频响图
-│   │   └── CurveImageDisplay.tsx        # [包装] 曲线图显示包装器
+│   │   └── MentionChip.tsx              # [展示] 产品 mention 标签
 │   │
 │   ├── hooks/
 │   │   └── useStreamingLLM.tsx          # [核心] LLM 流式调用逻辑
@@ -363,13 +363,16 @@ UsageInfo = {
 - 组件加载时
 - AI 消息完成后（延迟 1 秒）
 
-##### 5.2 隐藏的图片生成器 (L296-299)
+##### 5.2 隐藏的图片生成器 (L296-300)
 ```typescript
 <div style={{ display: 'none' }}>
-  <CurveImageDisplay />
+  <FrequencyResponseChart
+    originalDataSource={originalDataSource}
+    currentProcessedCurve={currentProcessedCurve}
+  />
 </div>
 ```
-**作用**: 确保 Canvas 渲染频响图并转为 Base64，供 AI 视觉识别使用
+**作用**: 通过 FrequencyResponseChart 的图像生成回调，持续更新 Base64 曲线图供 AI 视觉识别使用
 
 ##### 5.3 核心渲染 (L304-318)
 ```typescript

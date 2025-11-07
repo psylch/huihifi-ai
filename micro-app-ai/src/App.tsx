@@ -3,7 +3,7 @@ import AIAssistant from './components/AIAssistant';
 import { StoreProvider } from './store/MicroAppContext';
 import { FilterParams, FilterManipulation, FrequencyResponseData, SegmentCoverData } from './types';
 import { appConfig } from './config/appConfig';
-import CurveImageDisplay from './components/CurveImageDisplay';
+import FrequencyResponseChart from './components/FrequencyResponseChart';
 import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
 
 // 定义默认的共享数据类型 - 只包含与主应用交互的必要数据
@@ -200,155 +200,7 @@ const App: React.FC<AppProps> = (props) => {
       }
     },
   };
-
-  // 返回JSX元素，使用错误边界包装
-  // return (
-  //   <div className="micro-app-ai-container">
-  //     <StoreProvider sharedData={sharedData} callbacks={callbacks}>
-  //       {isInQiankun ? (
-  //         <ErrorFallback>
-  //           <div style={{ padding: '0px', height: '100%', display: 'flex', flexDirection: 'column' }}> {/* Use 100% height instead of 100vh for better embedding */}
-  //             <h1 style={{ marginBottom: '20px', fontSize: '1.5rem', paddingLeft: '20px', paddingTop: '20px' }}>千歌AI助手</h1>
-  //             <div style={{ 
-  //               flexGrow: 1, // Allow content to take available space
-  //               display: 'grid',
-  //               gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
-  //               gap: '20px',
-  //               padding: '0 20px 20px 20px', // Add padding around the grid
-  //               overflowY: 'auto' // Add scroll for content if it overflows
-  //             }}>
-  //               <AIAssistant />
-                
-  //               {/* Debug information panel for micro-app mode */}
-  //               {appConfig.debugInfo.enabled && showDebugInfo && (
-  //                 <div style={{overflowY: 'auto'}}> {/* Allow scrolling within the debug panel */}
-  //                   <div className="card">
-  //                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-  //                       <h2>当前数据状态</h2>
-  //                       <button 
-  //                         onClick={() => setShowDebugInfo(!showDebugInfo)}
-  //                         style={{
-  //                           padding: '4px 8px',
-  //                           backgroundColor: showDebugInfo ? '#dc3545' : '#28a745',
-  //                           color: '#fff',
-  //                           border: 'none',
-  //                           borderRadius: '4px',
-  //                           cursor: 'pointer'
-  //                         }}
-  //                       >
-  //                         {showDebugInfo ? '隐藏' : '显示'}调试信息
-  //                       </button>
-  //                     </div>
-  //                     <>
-  //                       <div style={{ marginBottom: '10px' }}>
-  //                         <h3>原始数据</h3>
-  //                         <pre style={{ 
-  //                           overflowX: 'auto', 
-  //                           padding: '8px', 
-  //                           backgroundColor: 'var(--surface-light)',
-  //                           borderRadius: '4px',
-  //                           fontSize: '12px'
-  //                         }}>
-  //                           {JSON.stringify(sharedData.originalDataSource?.slice(0, 5), null, 2)} {sharedData.originalDataSource?.length ? `...共${sharedData.originalDataSource.length}条数据` : '无数据'}
-  //                         </pre>
-  //                       </div>
-  //                       <div>
-  //                         <h3>已应用滤波器</h3>
-  //                         <pre style={{ 
-  //                           overflowX: 'auto', 
-  //                           padding: '8px', 
-  //                           backgroundColor: 'var(--surface-light)',
-  //                           borderRadius: '4px',
-  //                           fontSize: '12px'
-  //                         }}>
-  //                           {JSON.stringify(sharedData.appliedFilters, null, 2) || '无应用的滤波器'}
-  //                         </pre>
-  //                       </div>
-  //                       <div style={{ marginTop: '15px' }}>
-  //                         <h3>频率响应曲线</h3>
-  //                         <CurveImageDisplay />
-  //                       </div>
-  //                     </>
-  //                   </div>
-  //                 </div>
-  //               )}
-  //             </div>
-  //           </div>
-  //         </ErrorFallback>
-  //       ) : (
-  //         <div style={{ padding: '20px', height: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-  //           <h1 style={{ marginBottom: '20px' }}>AI HiFi Tuning - AI助手 (独立运行模式)</h1>
-  //           <div style={{ 
-  //             display: 'grid',
-  //             gridTemplateColumns: appConfig.debugInfo.enabled && showDebugInfo ? '1fr 1fr' : '1fr',
-  //             gap: '20px'
-  //           }}>
-  //             <AIAssistant />
-              
-  //             {/* 只有在appConfig中启用调试信息时才显示调试区域 */}
-  //             {appConfig.debugInfo.enabled && showDebugInfo && (
-  //               <div>
-  //                 <div className="card">
-  //                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-  //                     <h2>当前数据状态</h2>
-  //                     <button 
-  //                       onClick={() => setShowDebugInfo(!showDebugInfo)}
-  //                       style={{
-  //                         padding: '4px 8px',
-  //                         backgroundColor: showDebugInfo ? '#dc3545' : '#28a745',
-  //                         color: '#fff',
-  //                         border: 'none',
-  //                         borderRadius: '4px',
-  //                         cursor: 'pointer'
-  //                       }}
-  //                     >
-  //                       {showDebugInfo ? '隐藏' : '显示'}调试信息
-  //                     </button>
-  //                   </div>
-                    
-  //                   {showDebugInfo && (
-  //                     <>
-  //                       <div style={{ marginBottom: '10px' }}>
-  //                         <h3>原始数据</h3>
-  //                         <pre style={{ 
-  //                           overflowX: 'auto', 
-  //                           padding: '8px', 
-  //                           backgroundColor: 'var(--surface-light)',
-  //                           borderRadius: '4px',
-  //                           fontSize: '12px'
-  //                         }}>
-  //                           {JSON.stringify(sharedData.originalDataSource?.slice(0, 5), null, 2)} {sharedData.originalDataSource?.length ? `...共${sharedData.originalDataSource.length}条数据` : '无数据'}
-  //                         </pre>
-  //                       </div>
-  //                       <div>
-  //                         <h3>已应用滤波器</h3>
-  //                         <pre style={{ 
-  //                           overflowX: 'auto', 
-  //                           padding: '8px', 
-  //                           backgroundColor: 'var(--surface-light)',
-  //                           borderRadius: '4px',
-  //                           fontSize: '12px'
-  //                         }}>
-  //                           {JSON.stringify(sharedData.appliedFilters, null, 2) || '无应用的滤波器'}
-  //                         </pre>
-  //                       </div>
-  //                       <div style={{ marginTop: '15px' }}>
-  //                         <h3>频率响应曲线</h3>
-  //                         {/* 使用专门的曲线图显示组件，快事实现 */}
-  //                         <CurveImageDisplay />
-  //                       </div>
-  //                     </>
-  //                   )}
-  //                 </div>
-  //               </div>
-  //             )}
-  //           </div>
-  //         </div>
-  //       )}
-  //     </StoreProvider>
-  //   </div>
-  // );
-
+  
   // 返回JSX元素，使用错误边界包装
   return (
     <div className="micro-app-ai-container">
@@ -419,7 +271,10 @@ const App: React.FC<AppProps> = (props) => {
                         </div>
                         <div style={{ marginTop: '15px' }}>
                           <h3>频率响应曲线</h3>
-                          <CurveImageDisplay />
+                          <FrequencyResponseChart
+                            originalDataSource={sharedData.originalDataSource}
+                            currentProcessedCurve={sharedData.currentProcessedCurve}
+                          />
                         </div>
                         {props.userToken && (
                           <div style={{ marginTop: '15px' }}>
@@ -502,8 +357,10 @@ const App: React.FC<AppProps> = (props) => {
                         </div>
                         <div style={{ marginTop: '15px' }}>
                           <h3>频率响应曲线</h3>
-                          {/* 使用专门的曲线图显示组件，快事实现 */}
-                          <CurveImageDisplay />
+                          <FrequencyResponseChart
+                            originalDataSource={sharedData.originalDataSource}
+                            currentProcessedCurve={sharedData.currentProcessedCurve}
+                          />
                         </div>
                         {props.userToken && (
                           <div style={{ marginTop: '15px' }}>
