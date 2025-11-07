@@ -10,3 +10,4 @@ docs/
 eval/
 Prompts/
 .DS_Store
+.db
