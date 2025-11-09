@@ -93,6 +93,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
           return `<user_selected_item>${JSON.stringify({
             name: segment.data.name,
             uuid: segment.data.uuid,
+            dataGroup: segment.data.dataGroup ?? '',
           })}</user_selected_item>`;
         }
         return stripInvisibleChars(segment.content ?? '');
@@ -153,6 +154,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
             id: element.dataset.mentionId || uuidv4(),
             name: element.dataset.mentionName,
             uuid: element.dataset.mentionUuid,
+            dataGroup: element.dataset.mentionDataGroup ?? undefined,
           };
           collector.push({ type: 'mention', data });
         } else if (element.tagName === 'BR') {
@@ -307,6 +309,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
       span.dataset.mentionId = mentionId;
       span.dataset.mentionName = product.title;
       span.dataset.mentionUuid = product.uuid;
+      span.dataset.mentionDataGroup = product.dataGroup ?? '';
 
       const spacer = document.createTextNode(ZERO_WIDTH_SPACE);
 

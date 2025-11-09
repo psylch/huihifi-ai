@@ -12,7 +12,7 @@ interface ChatMessageBubbleProps {
   editFilterFromLLM: (filterId: string, filterParams: Partial<FilterParams>) => void;
   deleteFilterFromLLM: (filterId: string) => void;
   appliedFilters: FilterParams[];
-  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
+  coverSegmentFromLLM?: (data: SegmentCoverData) => void;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
@@ -147,7 +147,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         >
           <SegmentCoverAction
             segmentData={segmentCoverAction}
-            onApply={coverSegmentFromLLM ? (dataList) => coverSegmentFromLLM(dataList) : undefined}
+            onApply={coverSegmentFromLLM ? (data) => coverSegmentFromLLM(data) : undefined}
           />
         </div>
       )}

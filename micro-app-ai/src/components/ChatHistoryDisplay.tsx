@@ -9,7 +9,7 @@ interface ChatHistoryDisplayProps {
   editFilterFromLLM: (id: string, params: FilterManipulation['filterParams']) => boolean;
   deleteFilterFromLLM: (id: string) => boolean;
   appliedFilters: FilterParams[];
-  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
+  coverSegmentFromLLM?: (data: SegmentCoverData) => void;
 }
 
 const ChatHistoryDisplay: React.FC<ChatHistoryDisplayProps> = ({

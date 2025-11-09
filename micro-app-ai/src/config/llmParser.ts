@@ -32,10 +32,16 @@ export const parseSegmentCoverTag = (content: string): SegmentCoverData | null =
   try {
     const jsonContent = match[1].trim();
     const parsed = JSON.parse(jsonContent) as SegmentCoverData;
-    if (!Array.isArray(parsed?.data_list)) {
+    const normalizedList = parsed?.data_list ?? parsed?.dataList;
+    if (!Array.isArray(normalizedList)) {
       throw new Error('data_list must be an array');
     }
-    return parsed;
+    const normalized: SegmentCoverData = {
+      ...parsed,
+      data_list: normalizedList,
+      dataList: normalizedList,
+    };
+    return normalized;
   } catch (error) {
     console.error('Error parsing segment cover tag JSON:', error);
     return null;

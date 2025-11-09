@@ -38,7 +38,7 @@ interface MicroAppContextType {
   addFilterFromLLM: (params: FilterManipulation['filterParams']) => void;
   editFilterFromLLM: (id: string, params: FilterManipulation['filterParams']) => boolean;
   deleteFilterFromLLM: (id: string) => boolean;
-  coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
+  coverSegmentFromLLM?: (data: SegmentCoverData) => void;
 }
 
 // 创建上下文
@@ -57,7 +57,7 @@ interface StoreProviderProps {
     addFilterFromLLM: (filterParams: FilterManipulation['filterParams']) => void;
     editFilterFromLLM: (filterId: string, filterParams: FilterManipulation['filterParams']) => boolean;
     deleteFilterFromLLM: (filterId: string) => boolean;
-    coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
+    coverSegmentFromLLM?: (data: SegmentCoverData) => void;
   };
   userToken?: string; // 添加userToken参数
 }

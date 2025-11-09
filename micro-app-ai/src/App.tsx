@@ -26,7 +26,7 @@ interface AppProps {
     addFilterFromLLM: (filterParams: FilterManipulation['filterParams']) => void;
     editFilterFromLLM: (filterId: string, filterParams: FilterManipulation['filterParams']) => boolean;
     deleteFilterFromLLM: (filterId: string) => boolean;
-    coverSegmentFromLLM?: (dataList: SegmentCoverData['data_list']) => void;
+    coverSegmentFromLLM?: (data: SegmentCoverData) => void;
   };
   // 调试信息设置，由主应用传入
   debugSettings?: {
@@ -188,13 +188,18 @@ const App: React.FC<AppProps> = (props) => {
         return false;
       }
     },
-    coverSegmentFromLLM: (dataList: SegmentCoverData['data_list']) => {
+    coverSegmentFromLLM: (data: SegmentCoverData) => {
       try {
         if (props.callbacks?.coverSegmentFromLLM) {
-          props.callbacks.coverSegmentFromLLM(dataList);
+          const normalized: SegmentCoverData = {
+            ...data,
+            data_list: data.data_list && data.data_list.length > 0 ? data.data_list : data.dataList || [],
+            dataList: data.dataList && data.dataList.length > 0 ? data.dataList : data.data_list || [],
+          };
+          props.callbacks.coverSegmentFromLLM(normalized);
           return;
         }
-        console.log('模拟频段覆盖操作:', dataList);
+        console.log('模拟频段覆盖操作:', data);
       } catch (error) {
         console.error('调用频段覆盖回调失败:', error);
       }

@@ -108,6 +108,15 @@ class HuiHiFiClient:
                 except ValueError:
                     article = {}
 
+            data_group_value = ""
+            data_groups = item.get("dataGroups")
+            if isinstance(data_groups, str):
+                data_group_value = data_groups
+            elif isinstance(data_groups, list) and data_groups:
+                first_group = data_groups[0]
+                if isinstance(first_group, str):
+                    data_group_value = first_group
+
             products.append(
                 {
                     "uuid": item.get("uuid"),
@@ -115,6 +124,7 @@ class HuiHiFiClient:
                     "brand": brand if isinstance(brand, dict) else {"title": str(brand)},
                     "thumbnails": (article or {}).get("thumbnails", []),
                     "categoryName": category_name,
+                    "dataGroup": data_group_value,
                 }
             )
 

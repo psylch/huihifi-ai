@@ -3,7 +3,7 @@ import { SegmentCoverData } from '../types';
 
 interface SegmentCoverActionProps {
   segmentData: SegmentCoverData;
-  onApply?: (dataList: SegmentCoverData['data_list']) => void | Promise<void>;
+  onApply?: (data: SegmentCoverData) => void | Promise<void>;
 }
 
 const formatFrequencyRange = ([start, end]: [number, number]) => {
@@ -15,6 +15,17 @@ const formatFrequencyRange = ([start, end]: [number, number]) => {
   };
 
   return `${formatValue(start)} - ${formatValue(end)}`;
+};
+
+const normalizeSegmentData = (segmentData: SegmentCoverData): SegmentCoverData => {
+  const list = segmentData.data_list && segmentData.data_list.length > 0
+    ? segmentData.data_list
+    : segmentData.dataList || [];
+  return {
+    ...segmentData,
+    data_list: list,
+    dataList: list,
+  };
 };
 
 const SegmentCoverAction: React.FC<SegmentCoverActionProps> = ({ segmentData, onApply }) => {
@@ -29,7 +40,8 @@ const SegmentCoverAction: React.FC<SegmentCoverActionProps> = ({ segmentData, on
     setStatus('applying');
     setErrorMessage(null);
     try {
-      await Promise.resolve(onApply(segmentData.data_list));
+      const normalized = normalizeSegmentData(segmentData);
+      await Promise.resolve(onApply(normalized));
       setStatus('success');
       setTimeout(() => setStatus('idle'), 1500);
     } catch (error: any) {
@@ -59,7 +71,10 @@ const SegmentCoverAction: React.FC<SegmentCoverActionProps> = ({ segmentData, on
         频段覆盖建议
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {segmentData.data_list.map((item) => (
+        {(segmentData.data_list && segmentData.data_list.length > 0
+          ? segmentData.data_list
+          : segmentData.dataList || []
+        ).map((item) => (
           <li
             key={`${item.uuid}-${item.frequency_range.join('-')}`}
             style={{

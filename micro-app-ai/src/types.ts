@@ -27,6 +27,7 @@ export interface MentionedProduct {
   id: string;
   name: string;
   uuid: string;
+  dataGroup?: string;
 }
 
 export interface RichContentSegment {
@@ -46,6 +47,7 @@ export interface SegmentCoverItem {
 
 export interface SegmentCoverData {
   data_list: SegmentCoverItem[];
+  dataList?: SegmentCoverItem[];
 }
 
 // ============ chat messages ============
@@ -85,6 +87,7 @@ export interface ProductSearchResult {
   brand: { title?: string; img?: string };
   thumbnails: string[];
   categoryName: string;
+  dataGroup?: string;
 }
 
 export interface ProductSearchResponse {
@@ -98,10 +101,12 @@ declare global {
   interface Window {
     __POWERED_BY_QIANKUN__?: boolean;
     __HUIHIFI_API_BASE_URL__?: string;
+    __HUIHIFI_CHAT_API_URL__?: string;
   }
 
   interface ImportMetaEnv {
     readonly VITE_API_BASE_URL?: string;
+    readonly VITE_CHAT_API_URL?: string;
   }
 
   interface ImportMeta {

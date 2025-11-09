@@ -19,13 +19,13 @@ export interface ChatStreamOptions {
 }
 
 export class AIService {
-  constructor(private readonly baseUrl = apiConfig.baseUrl) {}
+  constructor(private readonly chatEndpoint = apiConfig.chatUrl) {}
 
   async sendChatMessage(
     request: ChatRequestParams,
     { signal, onChunk }: ChatStreamOptions
   ): Promise<ChatResponse> {
-    const response = await fetch(`${this.baseUrl}/chat`, {
+    const response = await fetch(this.chatEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
