@@ -257,17 +257,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
       const uptoCursor = text.slice(0, focusOffset);
       const atIndex = uptoCursor.lastIndexOf('@');
       if (atIndex >= 0) {
-        const charBefore = uptoCursor.charAt(atIndex - 1);
-        if (atIndex === 0 || /\s/.test(charBefore)) {
-          const query = uptoCursor.slice(atIndex + 1);
-          const mentionRange = range.cloneRange();
-          mentionRange.setStart(focusNode, atIndex);
-          mentionRangeRef.current = mentionRange;
-          const { position, direction } = calculateMentionPosition(mentionRange);
-          setMentionState({ active: true, query, position, direction });
-          runProductSearch(query);
-          return;
-        }
+        const query = uptoCursor.slice(atIndex + 1);
+        const mentionRange = range.cloneRange();
+        mentionRange.setStart(focusNode, atIndex);
+        mentionRangeRef.current = mentionRange;
+        const { position, direction } = calculateMentionPosition(mentionRange);
+        setMentionState({ active: true, query, position, direction });
+        runProductSearch(query);
+        return;
       }
     } else if (focusNode.nodeType === Node.ELEMENT_NODE) {
       // 如果光标恰好位于 mention span 后的文本节点开头
