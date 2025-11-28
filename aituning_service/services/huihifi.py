@@ -109,13 +109,16 @@ class HuiHiFiClient:
                     article = {}
 
             data_group_value = ""
-            data_groups = item.get("dataGroups")
-            if isinstance(data_groups, str):
-                data_group_value = data_groups
-            elif isinstance(data_groups, list) and data_groups:
-                first_group = data_groups[0]
-                if isinstance(first_group, str):
-                    data_group_value = first_group
+            data_groups_value = item.get("dataGroups")
+            data_groups: list[str] = []
+
+            if isinstance(data_groups_value, str):
+                data_groups = [data_groups_value]
+            elif isinstance(data_groups_value, list):
+                data_groups = [str(group) for group in data_groups_value if isinstance(group, (str, int, float))]
+
+            if data_groups:
+                data_group_value = data_groups[0]
 
             products.append(
                 {
@@ -125,6 +128,7 @@ class HuiHiFiClient:
                     "thumbnails": (article or {}).get("thumbnails", []),
                     "categoryName": category_name,
                     "dataGroup": data_group_value,
+                    "dataGroups": data_groups,
                 }
             )
 

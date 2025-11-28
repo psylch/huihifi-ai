@@ -9,6 +9,14 @@
 
 **HuiHiFi AI Tuning** 是一个基于 Qiankun 微前端架构的智能音频调音系统。
 
+## 🤝 协作/交互约定（spec-driven）
+- 任何改动前先查阅此文档和相关说明文档；新增规则请补充到 AGENTS 中。
+- 与用户交互时：直接给出决策和下一步，不赘述；需要选择时用编号列出；默认用中文回复。
+- 本地/联调/上线说明：
+  - 本地测试速查：`docs/local-testing.md`（后端启动脚本、前端 dev / dev:remote、调音模式验证）。
+  - 上线与部署：`docs/server-deployment-notes.md`（rsync+systemd 流程，env 仅用于本地 dev，生产构建不读取本地 env）。
+  - API/配置取值：优先 runtime 注入 `window.__HUIHIFI_API_BASE_URL__`，否则读取 `.env.*` 的 Vite env（仅 dev）。
+
 **micro-app-ai** 是 AI 调音助手微应用，提供：
 - 基于多模态 AI 的频响曲线分析（视觉识别）
 - 自然语言交互的滤波器调整建议

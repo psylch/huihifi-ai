@@ -23,7 +23,8 @@
     "start": "vite --port 8081",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "dev": "vite --port 8081"
+    "dev": "vite --port 8081",
+    "dev:remote": "vite --mode remote --port 8081"
   },
   "eslintConfig": {
     "extends": [

@@ -20,6 +20,9 @@ interface ChatInputAreaProps {
 }
 
 const DROPDOWN_ESTIMATED_HEIGHT = 220;
+const DROPDOWN_WIDTH = 260;
+const MODE_PANEL_WIDTH = 220;
+const DROPDOWN_GAP = 8;
 
 interface MentionDropdownPosition {
   left: number;
@@ -53,6 +56,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
     direction: 'down',
   });
   const [suggestions, setSuggestions] = useState<ProductSearchResult[]>([]);
+  const [pendingProduct, setPendingProduct] = useState<ProductSearchResult | null>(null);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimerRef = useRef<number | null>(null);
@@ -122,6 +126,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
         try {
           const result = await productService.searchProducts({ keyword, pageSize: 10 });
           setSuggestions(result.products);
+          setPendingProduct(null);
           setHighlightIndex(0);
         } catch (error) {
           console.error('产品搜索失败，使用空列表：', error);
@@ -231,6 +236,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
       direction: 'down',
     });
     setSuggestions([]);
+    setPendingProduct(null);
     setHighlightIndex(0);
   }, []);
 
@@ -290,7 +296,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
   }, [calculateMentionPosition, resetMentionState, runProductSearch]);
 
   const insertMention = useCallback(
-    (product: ProductSearchResult) => {
+    (product: ProductSearchResult, chosenDataGroup?: string) => {
       const range = mentionRangeRef.current;
       if (!editorRef.current || !range) {
         return;
@@ -304,9 +310,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
       span.textContent = product.title;
       span.contentEditable = 'false';
       span.dataset.mentionId = mentionId;
+      const resolvedDataGroup = chosenDataGroup ?? product.dataGroup ?? product.dataGroups?.[0] ?? '';
       span.dataset.mentionName = product.title;
       span.dataset.mentionUuid = product.uuid;
-      span.dataset.mentionDataGroup = product.dataGroup ?? '';
+      span.dataset.mentionDataGroup = resolvedDataGroup;
 
       const spacer = document.createTextNode(ZERO_WIDTH_SPACE);
 
@@ -415,11 +422,33 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
     };
   }, []);
 
+  const selectProductOrMode = useCallback(
+    (product: ProductSearchResult) => {
+      const dataGroups = product.dataGroups?.filter(Boolean) ?? [];
+      if (dataGroups.length <= 1) {
+        insertMention(product, product.dataGroup ?? dataGroups[0]);
+        setPendingProduct(null);
+      } else {
+        setPendingProduct(product);
+      }
+    },
+    [insertMention],
+  );
+
+  const selectDataGroup = useCallback(
+    (dataGroup: string) => {
+      if (!pendingProduct) return;
+      insertMention(pendingProduct, dataGroup);
+      setPendingProduct(null);
+    },
+    [insertMention, pendingProduct],
+  );
+
   const selectCurrentSuggestion = useCallback(() => {
     if (!mentionState.active || suggestions.length === 0) return;
     const target = suggestions[Math.max(0, Math.min(highlightIndex, suggestions.length - 1))];
-    insertMention(target);
-  }, [highlightIndex, insertMention, mentionState.active, suggestions]);
+    selectProductOrMode(target);
+  }, [highlightIndex, mentionState.active, selectProductOrMode, suggestions]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -475,58 +504,106 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSendMessage, isLoading 
     }
 
     return (
-      <div
-        className="mention-dropdown"
-        style={{
-          position: 'absolute',
-          left: mentionState.position.left,
-          top: mentionState.direction === 'up' ? mentionState.position.upTop : mentionState.position.downTop,
-          transform: mentionState.direction === 'up' ? 'translateY(calc(-100% - 8px))' : undefined,
-          backgroundColor: 'var(--surface-light)',
-          border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: 8,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-          width: 260,
-          zIndex: 20,
-          color: '#fff',
-          padding: '8px 0',
-          maxHeight: 280,
-          overflowY: 'auto',
-        }}
-      >
-        {isSearching && (
-          <div style={{ padding: '6px 12px', fontSize: 12, opacity: 0.7 }}>搜索中...</div>
+      <>
+        <div
+          className="mention-dropdown"
+          style={{
+            position: 'absolute',
+            left: mentionState.position.left,
+            top: mentionState.direction === 'up' ? mentionState.position.upTop : mentionState.position.downTop,
+            transform: mentionState.direction === 'up' ? 'translateY(calc(-100% - 8px))' : undefined,
+            backgroundColor: 'var(--surface-light)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: 8,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+            width: DROPDOWN_WIDTH,
+            zIndex: 20,
+            color: '#fff',
+            padding: '8px 0',
+            maxHeight: 280,
+            overflowY: 'auto',
+          }}
+        >
+          {isSearching && (
+            <div style={{ padding: '6px 12px', fontSize: 12, opacity: 0.7 }}>搜索中...</div>
+          )}
+          {!isSearching && suggestions.length === 0 && (
+            <div style={{ padding: '6px 12px', fontSize: 12, opacity: 0.7 }}>未找到匹配的产品</div>
+          )}
+          {suggestions.map((product, index) => {
+            const isActive = index === highlightIndex;
+            const hasMultipleModes = (product.dataGroups?.length ?? 0) > 1;
+            return (
+              <div
+                key={product.uuid}
+                onMouseEnter={() => setHighlightIndex(index)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectProductOrMode(product);
+                }}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: isActive ? 'rgba(59,130,246,0.25)' : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{product.title}</span>
+                <span style={{ fontSize: 12, opacity: 0.75 }}>
+                  {product.brand?.title ?? '未知品牌'} · {product.categoryName ?? '未分类'}
+                </span>
+                {hasMultipleModes && (
+                  <span style={{ fontSize: 11, color: '#9cc9ff' }}>该产品有多个调音模式，需选择其一</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {pendingProduct && (pendingProduct.dataGroups?.length ?? 0) > 1 && (
+          <div
+            style={{
+              position: 'absolute',
+              left: mentionState.position.left + DROPDOWN_WIDTH + DROPDOWN_GAP,
+              top: mentionState.direction === 'up' ? mentionState.position.upTop : mentionState.position.downTop,
+              transform: mentionState.direction === 'up' ? 'translateY(calc(-100% - 8px))' : undefined,
+              width: MODE_PANEL_WIDTH,
+              backgroundColor: 'var(--surface-light)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 8,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+              zIndex: 21,
+              color: '#fff',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div style={{ fontSize: 12, opacity: 0.8 }}>选择调音模式</div>
+            {pendingProduct.dataGroups?.map((group) => (
+              <div
+                key={group}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectDataGroup(group);
+                }}
+                style={{
+                  padding: '8px 10px',
+                  borderRadius: 6,
+                  backgroundColor: 'rgba(59,130,246,0.25)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                {group}
+              </div>
+            ))}
+          </div>
         )}
-        {!isSearching && suggestions.length === 0 && (
-          <div style={{ padding: '6px 12px', fontSize: 12, opacity: 0.7 }}>未找到匹配的产品</div>
-        )}
-        {suggestions.map((product, index) => {
-          const isActive = index === highlightIndex;
-          return (
-            <div
-              key={product.uuid}
-              onMouseEnter={() => setHighlightIndex(index)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                insertMention(product);
-              }}
-              style={{
-                padding: '8px 12px',
-                backgroundColor: isActive ? 'rgba(59,130,246,0.25)' : 'transparent',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-              }}
-            >
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{product.title}</span>
-              <span style={{ fontSize: 12, opacity: 0.75 }}>
-                {product.brand?.title ?? '未知品牌'} · {product.categoryName ?? '未分类'}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      </>
     );
   };
 

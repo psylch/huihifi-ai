@@ -88,6 +88,7 @@ export interface ProductSearchResult {
   thumbnails: string[];
   categoryName: string;
   dataGroup?: string;
+  dataGroups?: string[];
 }
 
 export interface ProductSearchResponse {
